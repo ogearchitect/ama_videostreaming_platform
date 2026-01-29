@@ -225,9 +225,27 @@ ama_videostreaming_platform/
 
 ### Running Tests
 
+The project includes a comprehensive test suite with **82 unit tests** covering all major components.
+
 ```bash
-pytest tests/ -v --cov=src
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage report
+pytest tests/ --cov=src --cov-report=html
+
+# Run specific test file
+pytest tests/test_blob_storage_service.py -v
 ```
+
+**Test Coverage:**
+- ✅ 82 tests (all passing)
+- ✅ Services: Blob Storage, Video Indexer, Synapse, Front Door
+- ✅ API endpoints: Videos, Analytics
+- ✅ Configuration and logging
+- ✅ Data models
+
+See [TESTING.md](TESTING.md) for detailed testing documentation.
 
 ### Code Formatting
 
