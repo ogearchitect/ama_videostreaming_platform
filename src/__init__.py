@@ -1,0 +1,1 @@
+"""Azure Video Streaming Platform."""
