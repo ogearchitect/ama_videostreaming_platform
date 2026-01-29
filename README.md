@@ -276,11 +276,65 @@ az webapp up --name your-app-name --resource-group your-rg
 
 ## Security Considerations
 
-- All Azure credentials are managed via environment variables
-- Azure Managed Identity is recommended for production
-- Front Door includes WAF for DDoS protection
-- Video files are stored in private blob containers
-- API authentication should be implemented for production use
+The platform implements multiple layers of security to protect data and ensure secure operations:
+
+### 1. Credentials Management
+- ✅ **All Azure credentials are managed via environment variables** - No hardcoded secrets in code
+- ✅ Environment variables loaded from `.env` file (development) or system environment (production)
+- ✅ `.env` files excluded from version control via `.gitignore`
+- 📋 See `.env.example` for required configuration
+
+### 2. Azure Managed Identity (Production Recommendation)
+- ✅ **Azure Managed Identity is recommended for production** environments
+- ✅ Eliminates need for connection strings and API keys
+- ✅ Automatic credential rotation by Azure
+- ✅ RBAC-based access control
+- ✅ Secure service-to-service authentication
+- 📋 See [SECURITY.md](SECURITY.md) for implementation guide
+
+### 3. Front Door WAF Protection
+- ✅ **Front Door includes WAF for DDoS protection**
+- ✅ Web Application Firewall protects against OWASP Top 10 threats
+- ✅ Automatic DDoS mitigation for volumetric attacks
+- ✅ SSL/TLS termination at the edge
+- ✅ Rate limiting and geo-filtering capabilities
+- 📋 See `src/services/front_door.py` for WAF configuration
+
+### 4. Private Blob Containers
+- ✅ **Video files are stored in private blob containers**
+- ✅ No anonymous or public access allowed
+- ✅ Authentication required for all blob operations
+- ✅ Access control via connection strings, SAS tokens, or Managed Identity
+- 📋 See `src/services/blob_storage.py` for security details
+
+### 5. API Authentication
+- ⚠️ **API authentication should be implemented for production use**
+- 📋 Currently in development mode (authentication not enforced)
+- 📋 Production requires: OAuth2/JWT, Azure AD, or API key authentication
+- 📋 Rate limiting should be implemented to prevent abuse
+- 📋 See `src/main.py` and [SECURITY.md](SECURITY.md) for implementation guide
+
+### Additional Security Measures
+
+**Data Protection:**
+- Encryption at rest (Azure Storage encryption - enabled by default)
+- Encryption in transit (HTTPS/TLS for all communications)
+- Private video privacy settings (Video Indexer)
+- Parameterized SQL queries (prevents SQL injection)
+
+**Network Security:**
+- Azure Storage firewall rules (restrict access by IP)
+- Azure Synapse firewall rules (control database access)
+- Front Door custom security rules
+- CORS configuration (should be restricted in production)
+
+**Monitoring & Auditing:**
+- Application Insights for request tracking
+- Structured logging for all operations
+- Security event logging
+- Audit trails for compliance
+
+**For detailed security implementation, see [SECURITY.md](SECURITY.md)**
 
 ## Performance Optimization
 

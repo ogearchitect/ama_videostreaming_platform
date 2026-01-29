@@ -1,4 +1,30 @@
-"""Azure Video Indexer service for AI-powered video analysis."""
+"""Azure Video Indexer service for AI-powered video analysis.
+
+Security Considerations:
+------------------------
+1. API authentication via subscription key (development) or Managed Identity (production)
+2. All videos indexed with 'Private' privacy setting (not publicly accessible)
+3. Access tokens are short-lived and automatically expire
+4. HTTPS-only communication with Video Indexer API
+5. For production, use Azure Managed Identity for authentication
+
+Production Authentication:
+---------------------------
+Use Azure Managed Identity instead of subscription keys:
+    from azure.identity import DefaultAzureCredential
+    
+    credential = DefaultAzureCredential()
+    # Use credential.get_token() to obtain access tokens
+    # No need to store subscription keys in configuration
+
+Video Privacy:
+--------------
+All videos are uploaded with privacy='Private' to ensure:
+- Videos are not publicly accessible
+- Authentication required to view videos
+- Access can be controlled via access tokens
+- Compliance with data protection regulations
+"""
 import json
 import time
 from typing import Optional, Dict, Any
@@ -13,7 +39,15 @@ logger = azure_logger.get_logger(__name__, 'video_indexer')
 
 
 class VideoIndexerService:
-    """Service for Azure Video Indexer integration."""
+    """Service for Azure Video Indexer integration.
+    
+    Security Features:
+    - Private video privacy by default
+    - API authentication via subscription key or Managed Identity
+    - HTTPS-only API communication
+    - Short-lived access tokens
+    - Secure video storage and processing
+    """
     
     def __init__(self):
         """Initialize the Video Indexer service."""
