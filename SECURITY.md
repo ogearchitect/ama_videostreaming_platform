@@ -248,8 +248,13 @@ az network front-door update \
    passlib[bcrypt]==1.7.4
    
    # Example implementation in main.py
+   from fastapi import Depends, HTTPException
    from fastapi.security import OAuth2PasswordBearer
    from jose import JWTError, jwt
+   
+   # Define these in your configuration
+   SECRET_KEY = settings.jwt_secret_key  # Store in environment variables
+   ALGORITHM = "HS256"
    
    oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
    
@@ -289,6 +294,7 @@ az network front-door update \
    
    API_KEY_HEADER = APIKeyHeader(name="X-API-Key")
    
+   # Add api_key to Settings class in src/config.py first
    async def get_api_key(api_key: str = Security(API_KEY_HEADER)):
        if api_key != settings.api_key:
            raise HTTPException(status_code=403, detail="Invalid API Key")
@@ -300,8 +306,10 @@ az network front-door update \
    # Add to requirements.txt
    slowapi==0.1.9
    
+   from fastapi import Request
    from slowapi import Limiter, _rate_limit_exceeded_handler
    from slowapi.util import get_remote_address
+   from slowapi.errors import RateLimitExceeded
    
    limiter = Limiter(key_func=get_remote_address)
    app.state.limiter = limiter

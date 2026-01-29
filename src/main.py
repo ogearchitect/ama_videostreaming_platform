@@ -44,8 +44,13 @@ Production Security Requirements:
 
 Example Production Authentication:
 -----------------------------------
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
+
+# Define these in your configuration
+SECRET_KEY = settings.jwt_secret_key  # Store in environment variables
+ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
