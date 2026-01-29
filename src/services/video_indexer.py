@@ -309,13 +309,13 @@ class VideoIndexerService:
         return success
     
     @log_azure_operation('video_indexer', 'get_streaming_url')
-    async def get_streaming_url(self, indexer_video_id: str, format: str = 'auto') -> Dict[str, str]:
+    async def get_streaming_url(self, indexer_video_id: str, streaming_format: str = 'auto') -> Dict[str, str]:
         """
         Get streaming URLs for a video in CMAF format.
         
         Args:
             indexer_video_id: Video Indexer video ID
-            format: Streaming format ('auto', 'HLS', 'DASH')
+            streaming_format: Streaming format ('auto', 'HLS', 'DASH')
             
         Returns:
             Dictionary with streaming URLs for different formats
@@ -334,19 +334,20 @@ class VideoIndexerService:
         
         streaming_url = response.json()
         
-        logger.info(f"Retrieved streaming URL for format: {format}", extra={
+        logger.info(f"Retrieved streaming URL for format: {streaming_format}", extra={
             'service': 'video_indexer',
             'operation': 'get_streaming_url',
             'indexer_video_id': indexer_video_id,
-            'format': format,
+            'streaming_format': streaming_format,
             'duration_ms': 0,
             'status': 'success'
         })
         
+        # Return streaming information based on configured preset
         return {
             'streaming_url': streaming_url,
-            'format': 'CMAF',
-            'supports': ['HLS', 'DASH']
+            'format': 'CMAF' if self.streaming_preset == 'Default' else self.streaming_preset,
+            'supports': ['HLS', 'DASH'] if self.streaming_preset == 'Default' else []
         }
 
 

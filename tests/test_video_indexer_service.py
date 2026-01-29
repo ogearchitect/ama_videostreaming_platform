@@ -81,11 +81,13 @@ async def test_upload_video_success(mock_video_indexer):
         assert result == "indexer-video-123"
         mock_post.assert_called_once()
         
-        # Verify call parameters
+        # Verify call parameters including CMAF streaming preset
         call_args = mock_post.call_args
         assert "accessToken" in call_args[1]["params"]
         assert call_args[1]["params"]["name"] == "test_video.mp4"
         assert call_args[1]["params"]["externalId"] == "video-id-123"
+        assert "streamingPreset" in call_args[1]["params"]
+        assert call_args[1]["params"]["streamingPreset"] == "Default"  # CMAF by default
 
 
 @pytest.mark.asyncio
