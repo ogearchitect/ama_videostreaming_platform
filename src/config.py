@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     azure_synapse_sql_pool_name: str = ""
     azure_synapse_connection_string: str = ""
     
+    # Azure Application Insights
+    azure_application_insights_key: str = ""
+    azure_application_insights_connection_string: str = ""
+    
     # Application
     api_host: str = "0.0.0.0"
     api_port: int = 8000

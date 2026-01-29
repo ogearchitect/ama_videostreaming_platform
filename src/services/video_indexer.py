@@ -5,6 +5,11 @@ from typing import Optional, Dict, Any
 import requests
 from src.config import settings
 from src.models.video import VideoInsights
+from src.utils.logging import azure_logger, log_azure_operation
+
+
+# Initialize logger for this service
+logger = azure_logger.get_logger(__name__, 'video_indexer')
 
 
 class VideoIndexerService:
@@ -17,7 +22,16 @@ class VideoIndexerService:
         self.subscription_key = settings.azure_video_indexer_subscription_key
         self.api_url = f"https://api.videoindexer.ai"
         self.access_token = None
+        
+        logger.info("Video Indexer service initialized", extra={
+            'service': 'video_indexer',
+            'operation': 'initialize',
+            'location': self.location,
+            'duration_ms': 0,
+            'status': 'success'
+        })
     
+    @log_azure_operation('video_indexer', 'get_access_token')
     def get_access_token(self) -> str:
         """
         Get access token for Video Indexer API.
@@ -42,8 +56,17 @@ class VideoIndexerService:
         response.raise_for_status()
         
         self.access_token = response.json()
+        
+        logger.info("Access token obtained", extra={
+            'service': 'video_indexer',
+            'operation': 'get_access_token',
+            'duration_ms': 0,
+            'status': 'success'
+        })
+        
         return self.access_token
     
+    @log_azure_operation('video_indexer', 'upload_video')
     async def upload_video(self, video_url: str, video_name: str, video_id: str) -> str:
         """
         Upload and index a video from a URL.
@@ -73,8 +96,21 @@ class VideoIndexerService:
         response.raise_for_status()
         
         result = response.json()
-        return result.get('id')
+        indexer_video_id = result.get('id')
+        
+        logger.info(f"Video uploaded to Video Indexer: {video_name}", extra={
+            'service': 'video_indexer',
+            'operation': 'upload',
+            'video_id': video_id,
+            'indexer_video_id': indexer_video_id,
+            'video_name': video_name,
+            'duration_ms': 0,
+            'status': 'success'
+        })
+        
+        return indexer_video_id
     
+    @log_azure_operation('video_indexer', 'get_video_index')
     async def get_video_index(self, indexer_video_id: str) -> Dict[str, Any]:
         """
         Get the indexing results for a video.
@@ -97,8 +133,19 @@ class VideoIndexerService:
         response = requests.get(url, params=params)
         response.raise_for_status()
         
-        return response.json()
+        index_data = response.json()
+        
+        logger.info(f"Retrieved video index", extra={
+            'service': 'video_indexer',
+            'operation': 'get_index',
+            'indexer_video_id': indexer_video_id,
+            'duration_ms': 0,
+            'status': 'success'
+        })
+        
+        return index_data
     
+    @log_azure_operation('video_indexer', 'get_video_insights')
     async def get_video_insights(self, indexer_video_id: str, video_id: str) -> VideoInsights:
         """
         Extract insights from an indexed video.
@@ -152,6 +199,23 @@ class VideoIndexerService:
         # Extract language
         language = insights.get('sourceLanguage', 'en-US')
         
+        logger.info(f"Extracted video insights", extra={
+            'service': 'video_indexer',
+            'operation': 'extract_insights',
+            'video_id': video_id,
+            'indexer_video_id': indexer_video_id,
+            'keywords_count': len(keywords),
+            'topics_count': len(topics),
+            'faces_count': len(faces),
+            'duration_ms': 0,
+            'status': 'success'
+        })
+        
+        # Log metrics
+        azure_logger.log_metric(logger, 'video_keywords_count', len(keywords), 'video_indexer', video_id=video_id)
+        azure_logger.log_metric(logger, 'video_topics_count', len(topics), 'video_indexer', video_id=video_id)
+        azure_logger.log_metric(logger, 'video_faces_count', len(faces), 'video_indexer', video_id=video_id)
+        
         return VideoInsights(
             video_id=video_id,
             transcript=transcript,
@@ -164,6 +228,7 @@ class VideoIndexerService:
             language=language
         )
     
+    @log_azure_operation('video_indexer', 'check_indexing_status')
     async def check_indexing_status(self, indexer_video_id: str) -> str:
         """
         Check the indexing status of a video.
@@ -187,8 +252,20 @@ class VideoIndexerService:
         response.raise_for_status()
         
         result = response.json()
-        return result.get('state', 'Unknown')
+        status = result.get('state', 'Unknown')
+        
+        logger.info(f"Indexing status: {status}", extra={
+            'service': 'video_indexer',
+            'operation': 'check_status',
+            'indexer_video_id': indexer_video_id,
+            'status_value': status,
+            'duration_ms': 0,
+            'status': 'success'
+        })
+        
+        return status
     
+    @log_azure_operation('video_indexer', 'delete_video')
     async def delete_video(self, indexer_video_id: str) -> bool:
         """
         Delete a video from Video Indexer.
@@ -209,7 +286,17 @@ class VideoIndexerService:
         }
         
         response = requests.delete(url, params=params)
-        return response.status_code == 204
+        success = response.status_code == 204
+        
+        logger.info(f"Video deletion: {'success' if success else 'failed'}", extra={
+            'service': 'video_indexer',
+            'operation': 'delete',
+            'indexer_video_id': indexer_video_id,
+            'duration_ms': 0,
+            'status': 'success' if success else 'failed'
+        })
+        
+        return success
 
 
 # Singleton instance

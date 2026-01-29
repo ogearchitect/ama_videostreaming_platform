@@ -9,6 +9,11 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 from src.config import settings
 from src.models.video import Video, VideoInsights, AnalyticsData
+from src.utils.logging import azure_logger, log_azure_operation
+
+
+# Initialize logger for this service
+logger = azure_logger.get_logger(__name__, 'synapse_analytics')
 
 
 class SynapseAnalyticsService:
@@ -20,7 +25,16 @@ class SynapseAnalyticsService:
         self.workspace_name = settings.azure_synapse_workspace_name
         self.sql_pool_name = settings.azure_synapse_sql_pool_name
         self.connection = None
+        
+        logger.info("Synapse Analytics service initialized", extra={
+            'service': 'synapse_analytics',
+            'operation': 'initialize',
+            'workspace_name': self.workspace_name,
+            'duration_ms': 0,
+            'status': 'success'
+        })
     
+    @log_azure_operation('synapse_analytics', 'get_connection')
     def get_connection(self):
         """Get a database connection."""
         if not PYODBC_AVAILABLE:
@@ -31,9 +45,16 @@ class SynapseAnalyticsService:
         
         if not self.connection or self.connection.closed:
             self.connection = pyodbc.connect(self.connection_string)
+            logger.info("Database connection established", extra={
+                'service': 'synapse_analytics',
+                'operation': 'connect',
+                'duration_ms': 0,
+                'status': 'success'
+            })
         
         return self.connection
     
+    @log_azure_operation('synapse_analytics', 'initialize_tables')
     async def initialize_tables(self):
         """Create necessary tables if they don't exist."""
         conn = self.get_connection()
@@ -92,7 +113,15 @@ class SynapseAnalyticsService:
         
         conn.commit()
         cursor.close()
+        
+        logger.info("Database tables initialized", extra={
+            'service': 'synapse_analytics',
+            'operation': 'initialize_tables',
+            'duration_ms': 0,
+            'status': 'success'
+        })
     
+    @log_azure_operation('synapse_analytics', 'insert_video')
     async def insert_video(self, video: Video):
         """
         Insert video metadata into Synapse.
@@ -120,7 +149,17 @@ class SynapseAnalyticsService:
         
         conn.commit()
         cursor.close()
+        
+        logger.info(f"Video inserted to Synapse: {video.name}", extra={
+            'service': 'synapse_analytics',
+            'operation': 'insert_video',
+            'video_id': video.id,
+            'video_name': video.name,
+            'duration_ms': 0,
+            'status': 'success'
+        })
     
+    @log_azure_operation('synapse_analytics', 'update_video_status')
     async def update_video_status(self, video_id: str, status: str, indexed_at: Optional[datetime] = None):
         """
         Update video status in Synapse.
@@ -141,7 +180,17 @@ class SynapseAnalyticsService:
         
         conn.commit()
         cursor.close()
+        
+        logger.info(f"Video status updated: {status}", extra={
+            'service': 'synapse_analytics',
+            'operation': 'update_status',
+            'video_id': video_id,
+            'status_value': status,
+            'duration_ms': 0,
+            'status': 'success'
+        })
     
+    @log_azure_operation('synapse_analytics', 'insert_insights')
     async def insert_insights(self, insights: VideoInsights):
         """
         Insert video insights into Synapse.
@@ -174,7 +223,18 @@ class SynapseAnalyticsService:
         
         conn.commit()
         cursor.close()
+        
+        logger.info(f"Video insights inserted", extra={
+            'service': 'synapse_analytics',
+            'operation': 'insert_insights',
+            'video_id': insights.video_id,
+            'keywords_count': len(insights.keywords),
+            'topics_count': len(insights.topics),
+            'duration_ms': 0,
+            'status': 'success'
+        })
     
+    @log_azure_operation('synapse_analytics', 'get_analytics')
     async def get_analytics(self) -> AnalyticsData:
         """
         Get analytics data from Synapse.
@@ -222,6 +282,15 @@ class SynapseAnalyticsService:
         
         cursor.close()
         
+        logger.info(f"Analytics retrieved", extra={
+            'service': 'synapse_analytics',
+            'operation': 'get_analytics',
+            'total_videos': total_videos,
+            'indexed_videos': indexed_videos,
+            'duration_ms': 0,
+            'status': 'success'
+        })
+        
         return AnalyticsData(
             total_videos=total_videos,
             total_duration=total_duration,
@@ -231,6 +300,7 @@ class SynapseAnalyticsService:
             top_topics=top_topics
         )
     
+    @log_azure_operation('synapse_analytics', 'delete_video')
     async def delete_video(self, video_id: str):
         """
         Delete a video and its associated data from Synapse.
@@ -255,6 +325,14 @@ class SynapseAnalyticsService:
         
         conn.commit()
         cursor.close()
+        
+        logger.info(f"Video deleted from Synapse", extra={
+            'service': 'synapse_analytics',
+            'operation': 'delete_video',
+            'video_id': video_id,
+            'duration_ms': 0,
+            'status': 'success'
+        })
 
 
 # Singleton instance
