@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceGroupName": {
+      "value": "ME-MngEnvMCAP012810-rasalman-1"
+    },
+    "location": {
+      "value": "eastus"
+    },
+    "environment": {
+      "value": "production"
+    },
+    "storageAccountName": {
+      "value": "videostream012810"
+    },
+    "videoIndexerAccountName": {
+      "value": "videoindexer012810"
+    },
+    "synapseWorkspaceName": {
+      "value": "videosynapse012810"
+    },
+    "frontDoorName": {
+      "value": "videofrontdoor012810"
+    },
+    "sqlAdminLogin": {
+      "value": "sqladminuser"
+    },
+    "sqlAdminPassword": {
+      "value": "CHANGE_ME_SecurePassword123!"
+    }
+  }
+}

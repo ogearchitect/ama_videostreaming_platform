@@ -8,29 +8,23 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
 }
 
-provider "azurerm" {
-  features {}
-}
-
-# Resource Group
-resource "azurerm_resource_group" "main" {
-  name     = var.resource_group_name
-  location = var.location
-  
-  tags = {
-    Environment = var.environment
-    Project     = "VideoStreamingPlatform"
-  }
+# Resource Group (using existing resource group)
+data "azurerm_resource_group" "main" {
+  name = var.resource_group_name
 }
 
 # Storage Account for Videos
 resource "azurerm_storage_account" "videos" {
   name                     = var.storage_account_name
-  resource_group_name      = azurerm_resource_group.main.name
-  location                 = azurerm_resource_group.main.location
+  resource_group_name      = data.azurerm_resource_group.main.name
+  location                 = data.azurerm_resource_group.main.location
   account_tier             = "Standard"
   account_replication_type = "GRS"
   account_kind             = "StorageV2"
@@ -79,8 +73,8 @@ resource "azurerm_video_analyzer" "indexer" {
 # Synapse Workspace
 resource "azurerm_synapse_workspace" "main" {
   name                                 = var.synapse_workspace_name
-  resource_group_name                  = azurerm_resource_group.main.name
-  location                             = azurerm_resource_group.main.location
+  resource_group_name                  = data.azurerm_resource_group.main.name
+  location                             = data.azurerm_resource_group.main.location
   storage_data_lake_gen2_filesystem_id = azurerm_storage_data_lake_gen2_filesystem.synapse.id
   sql_administrator_login              = "sqladminuser"
   sql_administrator_login_password     = random_password.synapse_sql_password.result
@@ -96,9 +90,9 @@ resource "azurerm_synapse_workspace" "main" {
 
 # Storage Account for Synapse
 resource "azurerm_storage_account" "synapse" {
-  name                     = "${var.synapse_workspace_name}storage"
-  resource_group_name      = azurerm_resource_group.main.name
-  location                 = azurerm_resource_group.main.location
+  name                     = "${var.synapse_workspace_name}st"
+  resource_group_name      = data.azurerm_resource_group.main.name
+  location                 = data.azurerm_resource_group.main.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
   account_kind             = "StorageV2"
@@ -135,7 +129,7 @@ resource "azurerm_synapse_sql_pool" "main" {
 # Azure Front Door
 resource "azurerm_cdn_frontdoor_profile" "main" {
   name                = var.front_door_name
-  resource_group_name = azurerm_resource_group.main.name
+  resource_group_name = data.azurerm_resource_group.main.name
   sku_name            = "Standard_AzureFrontDoor"
   
   tags = {
