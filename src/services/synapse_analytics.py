@@ -1,5 +1,10 @@
 """Azure Synapse Analytics service for video metadata and analytics."""
-import pyodbc
+try:
+    import pyodbc
+    PYODBC_AVAILABLE = True
+except ImportError:
+    PYODBC_AVAILABLE = False
+    
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from src.config import settings
@@ -18,6 +23,9 @@ class SynapseAnalyticsService:
     
     def get_connection(self):
         """Get a database connection."""
+        if not PYODBC_AVAILABLE:
+            raise ImportError("pyodbc is not installed. Install it to use Synapse Analytics.")
+        
         if not self.connection_string:
             raise ValueError("Synapse connection string not configured")
         
