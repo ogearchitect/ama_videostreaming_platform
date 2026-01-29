@@ -51,14 +51,14 @@ resource "azurerm_storage_container" "videos" {
   container_access_type = "private"
 }
 
-# Azure Video Indexer Account
-resource "azurerm_video_analyzer" "indexer" {
+# Azure AI Video Indexer Account
+resource "azurerm_video_indexer_account" "indexer" {
   name                = var.video_indexer_account_name
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = data.azurerm_resource_group.main.location
+  resource_group_name = data.azurerm_resource_group.main.name
   
-  storage_account {
-    id = azurerm_storage_account.videos.id
+  storage {
+    storage_account_id = azurerm_storage_account.videos.id
   }
   
   identity {

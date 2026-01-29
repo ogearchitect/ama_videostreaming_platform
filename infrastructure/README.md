@@ -130,7 +130,7 @@ The infrastructure deployment will create:
    - Blob container named "videos"
    - CORS configured for web access
 
-2. **Azure Video Analyzer** (Video Indexer)
+2. **Azure AI Video Indexer**
    - For AI-powered video analysis
    - Managed identity enabled
    - Connected to storage account

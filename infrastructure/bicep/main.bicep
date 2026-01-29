@@ -55,6 +55,24 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
   }
 }
 
+// Azure AI Video Indexer Account
+resource videoIndexer 'Microsoft.VideoIndexer/accounts@2024-01-01' = {
+  name: videoIndexerAccountName
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    storageServices: {
+      resourceId: storageAccount.id
+    }
+  }
+  tags: {
+    Environment: environment
+    Project: 'VideoStreamingPlatform'
+  }
+}
+
 // Storage Account for Synapse
 resource synapseStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: '${synapseWorkspaceName}storage'
@@ -170,6 +188,8 @@ resource frontDoorOrigin 'Microsoft.Cdn/profiles/originGroups/origins@2023-05-01
 // Outputs
 output storageAccountName string = storageAccount.name
 output storageConnectionString string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+output videoIndexerAccountId string = videoIndexer.id
+output videoIndexerAccountName string = videoIndexer.name
 output synapseWorkspaceName string = synapseWorkspace.name
 output synapseSqlEndpoint string = synapseWorkspace.properties.connectivityEndpoints.sql
 output frontDoorEndpoint string = 'https://${frontDoorEndpoint.properties.hostName}'

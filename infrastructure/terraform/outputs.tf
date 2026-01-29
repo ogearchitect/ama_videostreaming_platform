@@ -28,7 +28,7 @@ output "storage_connection_string" {
 
 output "video_indexer_account_id" {
   description = "Video Indexer account ID"
-  value       = azurerm_video_analyzer.indexer.id
+  value       = azurerm_video_indexer_account.indexer.id
 }
 
 output "synapse_workspace_name" {
