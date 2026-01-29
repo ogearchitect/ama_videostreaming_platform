@@ -98,7 +98,7 @@ class BlobStorageService:
             'service': 'blob_storage',
             'operation': 'upload',
             'video_id': video_id,
-            'filename': filename,
+            'video_filename': filename,
             'size_bytes': len(file_data),
             'content_type': content_type,
             'duration_ms': 0,
