@@ -7,7 +7,7 @@ A comprehensive video streaming platform built on Microsoft Azure, leveraging Az
 This platform integrates three core Azure services:
 
 1. **Azure Front Door**: Global load balancer and CDN for fast, secure video delivery
-2. **Azure Video Indexer**: AI-powered video analysis for insights extraction
+2. **Azure AI Video Indexer**: AI-powered video analysis for insights extraction
 3. **Azure Synapse Analytics**: Data warehouse for video metadata and analytics
 
 ## Features
