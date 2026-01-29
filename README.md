@@ -14,6 +14,7 @@ This platform integrates three core Azure services:
 
 - **Video Upload & Management**: Upload videos to Azure Blob Storage
 - **AI-Powered Indexing**: Automatic video indexing with insights (transcription, faces, keywords, etc.)
+- **CMAF Streaming**: Modern adaptive bitrate streaming with CMAF encoding support
 - **Global Content Delivery**: Fast video delivery through Azure Front Door CDN
 - **Analytics & Insights**: Video metadata analytics using Azure Synapse
 - **RESTful API**: FastAPI-based backend for all operations
@@ -74,6 +75,7 @@ AZURE_VIDEO_INDEXER_ACCOUNT_ID=your_account_id
 AZURE_VIDEO_INDEXER_LOCATION=your_location
 AZURE_VIDEO_INDEXER_SUBSCRIPTION_KEY=your_subscription_key
 AZURE_VIDEO_INDEXER_RESOURCE_ID=your_resource_id
+AZURE_VIDEO_INDEXER_STREAMING_PRESET=Default  # CMAF encoding (Default, SingleBitrate, NoStreaming)
 
 # Azure Front Door
 AZURE_FRONT_DOOR_ENDPOINT=your_frontdoor_endpoint
@@ -206,6 +208,9 @@ ama_videostreaming_platform/
 1. Create a Video Indexer account in Azure Portal
 2. Note the Account ID and Location
 3. Create a managed identity or use API key authentication
+4. Configure CMAF streaming preset (Default recommended for adaptive bitrate)
+
+**CMAF Streaming**: By default, videos are encoded with CMAF format for adaptive bitrate streaming, providing optimal compatibility across HLS and DASH protocols. See [CMAF_STREAMING.md](CMAF_STREAMING.md) for details.
 
 ### Azure Front Door
 

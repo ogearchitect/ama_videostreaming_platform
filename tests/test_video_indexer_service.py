@@ -12,6 +12,7 @@ def mock_video_indexer():
         mock_settings.azure_video_indexer_account_id = "test-account-id"
         mock_settings.azure_video_indexer_location = "eastus"
         mock_settings.azure_video_indexer_subscription_key = "test-key"
+        mock_settings.azure_video_indexer_streaming_preset = "Default"
         service = VideoIndexerService()
         yield service
 
@@ -22,12 +23,14 @@ def test_video_indexer_initialization():
         mock_settings.azure_video_indexer_account_id = "account123"
         mock_settings.azure_video_indexer_location = "westus"
         mock_settings.azure_video_indexer_subscription_key = "key123"
+        mock_settings.azure_video_indexer_streaming_preset = "Default"
         
         service = VideoIndexerService()
         
         assert service.account_id == "account123"
         assert service.location == "westus"
         assert service.subscription_key == "key123"
+        assert service.streaming_preset == "Default"
         assert service.api_url == "https://api.videoindexer.ai"
         assert service.access_token is None
 
@@ -261,3 +264,70 @@ async def test_get_video_insights_empty_data(mock_video_indexer):
         assert len(insights.keywords) == 0
         assert len(insights.topics) == 0
         assert insights.language == "en-US"  # default
+
+
+@pytest.mark.asyncio
+async def test_upload_video_with_cmaf_preset(mock_video_indexer):
+    """Test video upload with CMAF streaming preset."""
+    mock_video_indexer.access_token = "test-token"
+    
+    with patch('src.services.video_indexer.requests.post') as mock_post:
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"id": "indexer-video-456"}
+        mock_post.return_value = mock_response
+        
+        result = await mock_video_indexer.upload_video(
+            "https://test.blob.core.windows.net/video.mp4",
+            "test_video.mp4",
+            "video-id-456",
+            streaming_preset="Default"
+        )
+        
+        assert result == "indexer-video-456"
+        
+        # Verify streamingPreset parameter was included
+        call_args = mock_post.call_args
+        assert "streamingPreset" in call_args[1]["params"]
+        assert call_args[1]["params"]["streamingPreset"] == "Default"
+
+
+@pytest.mark.asyncio
+async def test_upload_video_with_custom_preset(mock_video_indexer):
+    """Test video upload with custom streaming preset."""
+    mock_video_indexer.access_token = "test-token"
+    
+    with patch('src.services.video_indexer.requests.post') as mock_post:
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"id": "indexer-video-789"}
+        mock_post.return_value = mock_response
+        
+        result = await mock_video_indexer.upload_video(
+            "https://test.blob.core.windows.net/video.mp4",
+            "test_video.mp4",
+            "video-id-789",
+            streaming_preset="SingleBitrate"
+        )
+        
+        assert result == "indexer-video-789"
+        
+        # Verify custom streamingPreset parameter
+        call_args = mock_post.call_args
+        assert call_args[1]["params"]["streamingPreset"] == "SingleBitrate"
+
+
+@pytest.mark.asyncio
+async def test_get_streaming_url(mock_video_indexer):
+    """Test getting CMAF streaming URL."""
+    mock_video_indexer.access_token = "test-token"
+    
+    with patch('src.services.video_indexer.requests.get') as mock_get:
+        mock_response = MagicMock()
+        mock_response.json.return_value = "https://streaming.videoindexer.ai/video-123/manifest.ism"
+        mock_get.return_value = mock_response
+        
+        result = await mock_video_indexer.get_streaming_url("video-123")
+        
+        assert "streaming_url" in result
+        assert result["format"] == "CMAF"
+        assert "HLS" in result["supports"]
+        assert "DASH" in result["supports"]

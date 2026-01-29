@@ -68,7 +68,8 @@ def test_settings_video_indexer_fields():
         'AZURE_VIDEO_INDEXER_ACCOUNT_ID': 'vi-account',
         'AZURE_VIDEO_INDEXER_LOCATION': 'northeurope',
         'AZURE_VIDEO_INDEXER_SUBSCRIPTION_KEY': 'vi-key',
-        'AZURE_VIDEO_INDEXER_RESOURCE_ID': '/subscriptions/sub-id/resourceGroups/rg/providers/Microsoft.VideoIndexer/accounts/account'
+        'AZURE_VIDEO_INDEXER_RESOURCE_ID': '/subscriptions/sub-id/resourceGroups/rg/providers/Microsoft.VideoIndexer/accounts/account',
+        'AZURE_VIDEO_INDEXER_STREAMING_PRESET': 'Default'
     }
     
     with patch.dict('os.environ', env_vars, clear=True):
@@ -78,6 +79,7 @@ def test_settings_video_indexer_fields():
         assert settings.azure_video_indexer_location == 'northeurope'
         assert settings.azure_video_indexer_subscription_key == 'vi-key'
         assert '/subscriptions/sub-id/' in settings.azure_video_indexer_resource_id
+        assert settings.azure_video_indexer_streaming_preset == 'Default'
 
 
 def test_settings_synapse_fields():
@@ -164,3 +166,20 @@ def test_settings_port_as_integer():
         settings = Settings()
         assert isinstance(settings.api_port, int)
         assert settings.api_port == 3000
+
+
+def test_settings_streaming_preset_default():
+    """Test that streaming preset defaults to 'Default' for CMAF."""
+    with patch.dict('os.environ', {}, clear=True):
+        settings = Settings()
+        assert settings.azure_video_indexer_streaming_preset == "Default"
+
+
+def test_settings_streaming_preset_options():
+    """Test different streaming preset options."""
+    presets = ["Default", "SingleBitrate", "NoStreaming"]
+    
+    for preset in presets:
+        with patch.dict('os.environ', {'AZURE_VIDEO_INDEXER_STREAMING_PRESET': preset}, clear=True):
+            settings = Settings()
+            assert settings.azure_video_indexer_streaming_preset == preset

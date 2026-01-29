@@ -20,6 +20,7 @@ class VideoIndexerService:
         self.account_id = settings.azure_video_indexer_account_id
         self.location = settings.azure_video_indexer_location
         self.subscription_key = settings.azure_video_indexer_subscription_key
+        self.streaming_preset = settings.azure_video_indexer_streaming_preset
         self.api_url = f"https://api.videoindexer.ai"
         self.access_token = None
         
@@ -27,6 +28,7 @@ class VideoIndexerService:
             'service': 'video_indexer',
             'operation': 'initialize',
             'location': self.location,
+            'streaming_preset': self.streaming_preset,
             'duration_ms': 0,
             'status': 'success'
         })
@@ -67,20 +69,26 @@ class VideoIndexerService:
         return self.access_token
     
     @log_azure_operation('video_indexer', 'upload_video')
-    async def upload_video(self, video_url: str, video_name: str, video_id: str) -> str:
+    async def upload_video(self, video_url: str, video_name: str, video_id: str, 
+                          streaming_preset: Optional[str] = None) -> str:
         """
-        Upload and index a video from a URL.
+        Upload and index a video from a URL with CMAF encoding support.
         
         Args:
             video_url: URL of the video to index
             video_name: Name of the video
             video_id: Unique identifier for the video
+            streaming_preset: Streaming format preset (Default, SingleBitrate, NoStreaming)
+                            Default uses CMAF for adaptive bitrate streaming
             
         Returns:
             Video Indexer video ID
         """
         if not self.access_token:
             self.get_access_token()
+        
+        # Use provided streaming preset or fall back to configured default
+        preset = streaming_preset or self.streaming_preset
         
         url = f"{self.api_url}/{self.location}/Accounts/{self.account_id}/Videos"
         
@@ -89,7 +97,8 @@ class VideoIndexerService:
             'name': video_name,
             'videoUrl': video_url,
             'externalId': video_id,
-            'privacy': 'Private'
+            'privacy': 'Private',
+            'streamingPreset': preset  # Enable CMAF encoding
         }
         
         response = requests.post(url, params=params)
@@ -104,6 +113,7 @@ class VideoIndexerService:
             'video_id': video_id,
             'indexer_video_id': indexer_video_id,
             'video_name': video_name,
+            'streaming_preset': preset,
             'duration_ms': 0,
             'status': 'success'
         })
@@ -297,6 +307,47 @@ class VideoIndexerService:
         })
         
         return success
+    
+    @log_azure_operation('video_indexer', 'get_streaming_url')
+    async def get_streaming_url(self, indexer_video_id: str, format: str = 'auto') -> Dict[str, str]:
+        """
+        Get streaming URLs for a video in CMAF format.
+        
+        Args:
+            indexer_video_id: Video Indexer video ID
+            format: Streaming format ('auto', 'HLS', 'DASH')
+            
+        Returns:
+            Dictionary with streaming URLs for different formats
+        """
+        if not self.access_token:
+            self.get_access_token()
+        
+        url = f"{self.api_url}/{self.location}/Accounts/{self.account_id}/Videos/{indexer_video_id}/StreamingUrl"
+        
+        params = {
+            'accessToken': self.access_token
+        }
+        
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        
+        streaming_url = response.json()
+        
+        logger.info(f"Retrieved streaming URL for format: {format}", extra={
+            'service': 'video_indexer',
+            'operation': 'get_streaming_url',
+            'indexer_video_id': indexer_video_id,
+            'format': format,
+            'duration_ms': 0,
+            'status': 'success'
+        })
+        
+        return {
+            'streaming_url': streaming_url,
+            'format': 'CMAF',
+            'supports': ['HLS', 'DASH']
+        }
 
 
 # Singleton instance
