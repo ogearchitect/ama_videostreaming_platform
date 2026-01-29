@@ -14,10 +14,13 @@ This platform integrates three core Azure services:
 
 - **Video Upload & Management**: Upload videos to Azure Blob Storage
 - **AI-Powered Indexing**: Automatic video indexing with insights (transcription, faces, keywords, etc.)
+- **CMAF Streaming**: Modern adaptive bitrate streaming with CMAF encoding support
 - **Global Content Delivery**: Fast video delivery through Azure Front Door CDN
 - **Analytics & Insights**: Video metadata analytics using Azure Synapse
 - **RESTful API**: FastAPI-based backend for all operations
 - **Scalable Architecture**: Cloud-native design for high availability
+- **Comprehensive Monitoring**: Azure Application Insights integration with structured logging
+- **Performance Tracking**: Automatic operation duration and metrics tracking
 
 ## Architecture Diagram
 
@@ -72,6 +75,7 @@ AZURE_VIDEO_INDEXER_ACCOUNT_ID=your_account_id
 AZURE_VIDEO_INDEXER_LOCATION=your_location
 AZURE_VIDEO_INDEXER_SUBSCRIPTION_KEY=your_subscription_key
 AZURE_VIDEO_INDEXER_RESOURCE_ID=your_resource_id
+AZURE_VIDEO_INDEXER_STREAMING_PRESET=Default  # CMAF encoding (Default, SingleBitrate, NoStreaming)
 
 # Azure Front Door
 AZURE_FRONT_DOOR_ENDPOINT=your_frontdoor_endpoint
@@ -80,6 +84,10 @@ AZURE_FRONT_DOOR_ENDPOINT=your_frontdoor_endpoint
 AZURE_SYNAPSE_WORKSPACE_NAME=your_workspace_name
 AZURE_SYNAPSE_SQL_POOL_NAME=your_sql_pool_name
 AZURE_SYNAPSE_CONNECTION_STRING=your_synapse_connection_string
+
+# Azure Application Insights (Optional - for monitoring)
+AZURE_APPLICATION_INSIGHTS_KEY=your_instrumentation_key
+AZURE_APPLICATION_INSIGHTS_CONNECTION_STRING=your_connection_string
 
 # Application
 API_HOST=0.0.0.0
@@ -200,6 +208,9 @@ ama_videostreaming_platform/
 1. Create a Video Indexer account in Azure Portal
 2. Note the Account ID and Location
 3. Create a managed identity or use API key authentication
+4. Configure CMAF streaming preset (Default recommended for adaptive bitrate)
+
+**CMAF Streaming**: By default, videos are encoded with CMAF format for adaptive bitrate streaming, providing optimal compatibility across HLS and DASH protocols. See [CMAF_STREAMING.md](CMAF_STREAMING.md) for details.
 
 ### Azure Front Door
 
@@ -219,9 +230,27 @@ ama_videostreaming_platform/
 
 ### Running Tests
 
+The project includes a comprehensive test suite with **82 unit tests** covering all major components.
+
 ```bash
-pytest tests/ -v --cov=src
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage report
+pytest tests/ --cov=src --cov-report=html
+
+# Run specific test file
+pytest tests/test_blob_storage_service.py -v
 ```
+
+**Test Coverage:**
+- ✅ 82 tests (all passing)
+- ✅ Services: Blob Storage, Video Indexer, Synapse, Front Door
+- ✅ API endpoints: Videos, Analytics
+- ✅ Configuration and logging
+- ✅ Data models
+
+See [TESTING.md](TESTING.md) for detailed testing documentation.
 
 ### Code Formatting
 
@@ -262,10 +291,16 @@ az webapp up --name your-app-name --resource-group your-rg
 
 ## Monitoring & Logging
 
-- Application Insights for API monitoring
-- Azure Monitor for infrastructure health
-- Video Indexer provides processing status
-- Synapse includes built-in query monitoring
+The platform includes comprehensive monitoring and logging for all Azure components:
+
+- **Structured Logging**: All operations logged with context (service, operation, duration, status)
+- **Application Insights**: Real-time monitoring, log analytics, and custom dashboards
+- **Request Tracing**: Every HTTP request tracked with duration and correlation IDs
+- **Performance Metrics**: Automatic tracking of operation durations and custom metrics
+- **Error Tracking**: Detailed error logging with stack traces and context
+- **Service Health**: Monitor Blob Storage, Video Indexer, Synapse, and Front Door
+
+See [MONITORING.md](MONITORING.md) for detailed monitoring and logging configuration.
 
 ## Contributing
 

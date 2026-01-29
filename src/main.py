@@ -1,8 +1,33 @@
 """Main FastAPI application for Azure Video Streaming Platform."""
-from fastapi import FastAPI
+import logging
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import time
 from src.api import videos, analytics
 from src.config import settings
+from src.utils.logging import azure_logger
+
+
+# Initialize logging
+logger = azure_logger.get_logger(__name__, 'application')
+
+# Configure Application Insights if key is provided
+if settings.azure_application_insights_key:
+    azure_logger.configure_application_insights(settings.azure_application_insights_key)
+    logger.info("Application Insights configured", extra={
+        'service': 'application',
+        'operation': 'startup',
+        'duration_ms': 0,
+        'status': 'success'
+    })
+else:
+    logger.warning("Application Insights key not configured - using console logging only", extra={
+        'service': 'application',
+        'operation': 'startup',
+        'duration_ms': 0,
+        'status': 'warning'
+    })
 
 
 # Create FastAPI app
@@ -11,6 +36,79 @@ app = FastAPI(
     description="A video streaming platform using Azure Front Door, Video Indexer, and Synapse Analytics",
     version="1.0.0"
 )
+
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Middleware to log all HTTP requests with duration tracking."""
+    start_time = time.time()
+    request_id = request.headers.get('X-Request-ID', 'no-request-id')
+    
+    # Log request start
+    logger.info(
+        f"Request started: {request.method} {request.url.path}",
+        extra={
+            'service': 'api',
+            'operation': 'http_request',
+            'method': request.method,
+            'path': request.url.path,
+            'request_id': request_id,
+            'duration_ms': 0,
+            'status': 'started'
+        }
+    )
+    
+    try:
+        response = await call_next(request)
+        duration_ms = int((time.time() - start_time) * 1000)
+        
+        # Log successful request
+        logger.info(
+            f"Request completed: {request.method} {request.url.path} - {response.status_code}",
+            extra={
+                'service': 'api',
+                'operation': 'http_request',
+                'method': request.method,
+                'path': request.url.path,
+                'status_code': response.status_code,
+                'request_id': request_id,
+                'duration_ms': duration_ms,
+                'status': 'success' if response.status_code < 400 else 'error'
+            }
+        )
+        
+        # Add request ID to response headers
+        response.headers['X-Request-ID'] = request_id
+        return response
+        
+    except Exception as e:
+        duration_ms = int((time.time() - start_time) * 1000)
+        
+        # Log failed request
+        logger.error(
+            f"Request failed: {request.method} {request.url.path} - {str(e)}",
+            extra={
+                'service': 'api',
+                'operation': 'http_request',
+                'method': request.method,
+                'path': request.url.path,
+                'request_id': request_id,
+                'duration_ms': duration_ms,
+                'status': 'error',
+                'error': str(e),
+                'error_type': type(e).__name__
+            },
+            exc_info=True
+        )
+        
+        # Return error response
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"},
+            headers={'X-Request-ID': request_id}
+        )
+
 
 # Configure CORS
 app.add_middleware(
@@ -24,6 +122,28 @@ app.add_middleware(
 # Include routers
 app.include_router(videos.router)
 app.include_router(analytics.router)
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Application startup event handler."""
+    logger.info("Application starting up", extra={
+        'service': 'application',
+        'operation': 'startup',
+        'duration_ms': 0,
+        'status': 'success'
+    })
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Application shutdown event handler."""
+    logger.info("Application shutting down", extra={
+        'service': 'application',
+        'operation': 'shutdown',
+        'duration_ms': 0,
+        'status': 'success'
+    })
 
 
 @app.get("/")

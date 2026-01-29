@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     azure_video_indexer_location: str = "eastus"
     azure_video_indexer_subscription_key: str = ""
     azure_video_indexer_resource_id: str = ""
+    azure_video_indexer_streaming_preset: str = "Default"  # Default, SingleBitrate, or NoStreaming
     
     # Azure Front Door
     azure_front_door_endpoint: str = ""
@@ -28,6 +29,10 @@ class Settings(BaseSettings):
     azure_synapse_workspace_name: str = ""
     azure_synapse_sql_pool_name: str = ""
     azure_synapse_connection_string: str = ""
+    
+    # Azure Application Insights
+    azure_application_insights_key: str = ""
+    azure_application_insights_connection_string: str = ""
     
     # Application
     api_host: str = "0.0.0.0"
