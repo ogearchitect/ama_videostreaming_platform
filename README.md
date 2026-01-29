@@ -18,6 +18,8 @@ This platform integrates three core Azure services:
 - **Analytics & Insights**: Video metadata analytics using Azure Synapse
 - **RESTful API**: FastAPI-based backend for all operations
 - **Scalable Architecture**: Cloud-native design for high availability
+- **Comprehensive Monitoring**: Azure Application Insights integration with structured logging
+- **Performance Tracking**: Automatic operation duration and metrics tracking
 
 ## Architecture Diagram
 
@@ -80,6 +82,10 @@ AZURE_FRONT_DOOR_ENDPOINT=your_frontdoor_endpoint
 AZURE_SYNAPSE_WORKSPACE_NAME=your_workspace_name
 AZURE_SYNAPSE_SQL_POOL_NAME=your_sql_pool_name
 AZURE_SYNAPSE_CONNECTION_STRING=your_synapse_connection_string
+
+# Azure Application Insights (Optional - for monitoring)
+AZURE_APPLICATION_INSIGHTS_KEY=your_instrumentation_key
+AZURE_APPLICATION_INSIGHTS_CONNECTION_STRING=your_connection_string
 
 # Application
 API_HOST=0.0.0.0
@@ -262,10 +268,16 @@ az webapp up --name your-app-name --resource-group your-rg
 
 ## Monitoring & Logging
 
-- Application Insights for API monitoring
-- Azure Monitor for infrastructure health
-- Video Indexer provides processing status
-- Synapse includes built-in query monitoring
+The platform includes comprehensive monitoring and logging for all Azure components:
+
+- **Structured Logging**: All operations logged with context (service, operation, duration, status)
+- **Application Insights**: Real-time monitoring, log analytics, and custom dashboards
+- **Request Tracing**: Every HTTP request tracked with duration and correlation IDs
+- **Performance Metrics**: Automatic tracking of operation durations and custom metrics
+- **Error Tracking**: Detailed error logging with stack traces and context
+- **Service Health**: Monitor Blob Storage, Video Indexer, Synapse, and Front Door
+
+See [MONITORING.md](MONITORING.md) for detailed monitoring and logging configuration.
 
 ## Contributing
 
