@@ -1,4 +1,38 @@
-"""Azure Front Door configuration and management."""
+"""Azure Front Door configuration and management.
+
+Security Considerations:
+------------------------
+1. Front Door includes Web Application Firewall (WAF) for DDoS protection
+2. WAF provides protection against common web vulnerabilities (OWASP Top 10)
+3. SSL/TLS termination at the edge for secure communication
+4. Geo-filtering capabilities for access control
+5. Custom WAF rules for additional security policies
+6. Rate limiting to prevent abuse and attacks
+
+Front Door Security Features:
+------------------------------
+- DDoS Protection: Automatic protection against volumetric attacks
+- WAF (Web Application Firewall): Protects against application-layer attacks
+- SSL/TLS: End-to-end encryption for data in transit
+- Custom Domains: Support for custom domains with managed certificates
+- URL Filtering: Block or allow traffic based on URL patterns
+- IP Filtering: Allow/deny lists for source IP addresses
+
+Production Configuration:
+-------------------------
+1. Enable WAF with Microsoft-managed rule sets
+2. Configure custom WAF rules for your application
+3. Enable HTTPS only (disable HTTP)
+4. Set up custom domains with SSL certificates
+5. Configure rate limiting per IP address
+6. Enable diagnostic logging for security monitoring
+7. Set up alerts for security events
+
+Example WAF Rule Set:
+- Microsoft_DefaultRuleSet: Protection against common threats
+- Microsoft_BotManagerRuleSet: Bot protection
+- Custom rules for application-specific security needs
+"""
 from typing import Dict, Any, Optional
 from src.config import settings
 from src.utils.logging import azure_logger
@@ -9,7 +43,15 @@ logger = azure_logger.get_logger(__name__, 'front_door')
 
 
 class FrontDoorService:
-    """Service for Azure Front Door integration."""
+    """Service for Azure Front Door integration.
+    
+    Security Features:
+    - WAF (Web Application Firewall) for DDoS protection
+    - SSL/TLS termination and encryption
+    - Geo-filtering and IP filtering capabilities
+    - Rate limiting and throttling
+    - Security rule sets for common attack patterns
+    """
     
     def __init__(self):
         """Initialize the Front Door service."""
@@ -112,7 +154,7 @@ class FrontDoorService:
         Get Front Door configuration details.
         
         Returns:
-            Configuration dictionary
+            Configuration dictionary including security features
         """
         return {
             'endpoint': self.endpoint,
@@ -122,8 +164,14 @@ class FrontDoorService:
                 'ssl_offloading': True,
                 'url_routing': True,
                 'caching': True,
-                'waf_protection': True,
+                'waf_protection': True,  # DDoS and application-layer attack protection
                 'compression': True
+            },
+            'security': {
+                'waf_enabled': True,
+                'ddos_protection': True,
+                'https_only': True,  # Recommended for production
+                'custom_ssl': True
             }
         }
     

@@ -1,4 +1,37 @@
-"""Azure Synapse Analytics service for video metadata and analytics."""
+"""Azure Synapse Analytics service for video metadata and analytics.
+
+Security Considerations:
+------------------------
+1. Connection string authentication (development) or Managed Identity (production)
+2. SQL injection prevention via parameterized queries
+3. Encrypted connections (Encrypt=yes in connection string)
+4. Firewall rules to restrict database access
+5. Row-level security and column-level security for data access control
+6. Audit logging for compliance and security monitoring
+
+Production Authentication:
+---------------------------
+Use Azure Managed Identity instead of connection strings:
+    from azure.identity import DefaultAzureCredential
+    import pyodbc
+    
+    credential = DefaultAzureCredential()
+    token = credential.get_token("https://database.windows.net/.default")
+    connection_string = "Driver={ODBC Driver 17 for SQL Server};Server=..."
+    connection = pyodbc.connect(connection_string, attrs_before={
+        1256: token.token  # SQL_COPT_SS_ACCESS_TOKEN
+    })
+
+Security Best Practices:
+------------------------
+1. Always use parameterized queries (never string concatenation)
+2. Enable TDE (Transparent Data Encryption) for data at rest
+3. Configure firewall to allow only trusted IP addresses
+4. Use Azure AD authentication instead of SQL authentication
+5. Enable Advanced Threat Protection for security alerts
+6. Implement row-level security for multi-tenant scenarios
+7. Regular security audits and compliance reviews
+"""
 try:
     import pyodbc
     PYODBC_AVAILABLE = True
@@ -17,7 +50,15 @@ logger = azure_logger.get_logger(__name__, 'synapse_analytics')
 
 
 class SynapseAnalyticsService:
-    """Service for Azure Synapse Analytics integration."""
+    """Service for Azure Synapse Analytics integration.
+    
+    Security Features:
+    - Encrypted connections (TLS/SSL)
+    - Parameterized queries to prevent SQL injection
+    - Support for Managed Identity authentication
+    - Firewall-protected database access
+    - Audit logging capabilities
+    """
     
     def __init__(self):
         """Initialize the Synapse Analytics service."""

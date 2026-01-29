@@ -1,4 +1,33 @@
-"""Azure Blob Storage service for video uploads and management."""
+"""Azure Blob Storage service for video uploads and management.
+
+Security Considerations:
+------------------------
+1. Video files are stored in PRIVATE blob containers (not publicly accessible)
+2. Access to blobs requires authentication via connection string or Managed Identity
+3. For production, use Azure Managed Identity instead of connection strings
+4. Enable blob versioning and soft delete for data protection
+5. Configure firewall rules to restrict storage account access
+6. Use SAS tokens with limited permissions and expiration for temporary access
+7. Enable Azure Storage encryption at rest (enabled by default)
+8. Use HTTPS only for all blob operations (enforced by Azure SDK)
+
+Production Setup:
+-----------------
+To use Managed Identity instead of connection strings:
+    from azure.identity import DefaultAzureCredential
+    from azure.storage.blob import BlobServiceClient
+    
+    account_url = "https://<storage_account>.blob.core.windows.net"
+    credential = DefaultAzureCredential()
+    blob_service_client = BlobServiceClient(account_url, credential=credential)
+
+Container Access Level:
+-----------------------
+Containers should be created with 'Private' access level to ensure:
+- Anonymous access is disabled
+- Authentication is required for all operations
+- Videos are not publicly accessible without authorization
+"""
 import uuid
 from typing import List, Optional
 from datetime import datetime
@@ -14,7 +43,14 @@ logger = azure_logger.get_logger(__name__, 'blob_storage')
 
 
 class BlobStorageService:
-    """Service for managing video files in Azure Blob Storage."""
+    """Service for managing video files in Azure Blob Storage.
+    
+    Security Features:
+    - Private container access (no anonymous access)
+    - HTTPS-only communication (enforced by Azure SDK)
+    - Authentication required for all operations
+    - Supports both connection string and Managed Identity authentication
+    """
     
     def __init__(self):
         """Initialize the blob storage service."""
@@ -51,7 +87,14 @@ class BlobStorageService:
     
     @log_azure_operation('blob_storage', 'initialize_container')
     async def initialize_container(self) -> None:
-        """Create the container if it doesn't exist."""
+        """Create the container if it doesn't exist.
+        
+        Security: Container is created with PRIVATE access level by default.
+        This ensures that:
+        - No anonymous/public access is allowed
+        - Authentication is required for all blob operations
+        - Videos cannot be accessed without proper credentials
+        """
         if not self.container_client:
             raise ValueError("Blob service client not initialized")
         

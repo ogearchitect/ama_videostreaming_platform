@@ -1,4 +1,72 @@
-"""Main FastAPI application for Azure Video Streaming Platform."""
+"""Main FastAPI application for Azure Video Streaming Platform.
+
+Security Considerations:
+------------------------
+1. API authentication should be implemented for production use
+2. CORS configuration should be restricted to trusted origins
+3. Rate limiting should be implemented to prevent abuse
+4. Input validation is enforced via Pydantic models
+5. Request logging for security auditing and monitoring
+
+Production Security Requirements:
+----------------------------------
+1. Authentication & Authorization:
+   - Implement OAuth2 with JWT tokens
+   - Use Azure AD for user authentication
+   - Add API key authentication for service-to-service calls
+   - Example: from fastapi.security import OAuth2PasswordBearer
+
+2. CORS Configuration:
+   - Replace allow_origins=["*"] with specific allowed origins
+   - Use environment variable for allowed origins
+   - Example: allow_origins=["https://yourdomain.com"]
+
+3. Rate Limiting:
+   - Implement rate limiting per IP/user
+   - Protect against brute force and DoS attacks
+   - Example: from slowapi import Limiter
+
+4. Input Validation:
+   - All inputs validated via Pydantic models (already implemented)
+   - Additional sanitization for file uploads
+   - Validate file types, sizes, and content
+
+5. HTTPS Only:
+   - Configure Front Door for HTTPS only
+   - Redirect HTTP to HTTPS
+   - Use HSTS headers
+
+6. Security Headers:
+   - Add security headers middleware
+   - X-Content-Type-Options: nosniff
+   - X-Frame-Options: DENY
+   - Content-Security-Policy
+
+Example Production Authentication:
+-----------------------------------
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+
+# Define these in your configuration
+SECRET_KEY = settings.jwt_secret_key  # Store in environment variables
+ALGORITHM = "HS256"
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+@app.get("/api/videos")
+async def get_videos(token: str = Depends(oauth2_scheme)):
+    # Verify token and get user
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials"
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return videos
+    except JWTError:
+        raise credentials_exception
+"""
 import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -111,9 +179,11 @@ async def log_requests(request: Request, call_next):
 
 
 # Configure CORS
+# Security: In production, replace allow_origins=["*"] with specific allowed origins
+# Example: allow_origins=["https://yourdomain.com", "https://app.yourdomain.com"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=["*"],  # TODO: Configure appropriately for production (security requirement)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
