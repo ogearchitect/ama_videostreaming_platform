@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Navigation from "@/components/navigation";
 
 export const metadata: Metadata = {
   title: "AMA Video Streaming",
@@ -42,7 +43,8 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-dvh bg-[var(--bg-0)] text-[var(--text-strong)] antialiased">
-        {children}
+        <Navigation />
+        <main className="pt-16 min-h-screen">{children}</main>
       </body>
     </html>
   );
